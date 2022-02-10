@@ -1,0 +1,2 @@
+cd Desktop\mdp-irs\src
+python ImageRecognitionServer.py
