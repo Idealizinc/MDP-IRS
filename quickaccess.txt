@@ -1,2 +1,6 @@
+d:
+cd D:\Workspace\GitKraken\MDP-IRS\src
+
 cd Desktop\mdp-irs\src
+
 python ImageRecognitionServer.py

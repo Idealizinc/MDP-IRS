@@ -30,18 +30,21 @@ class SymbolRecognizer:
         results = self.Model(srcPath)
         #results.save()  # or .show()
         results.show()
-        #labels, cord_thres = results.xyxyn[0][:, -1].numpy(), results.xyxyn[0][:, :-1].numpy()
         outputMessage = self.SetupResultString(self.ProcessInferenceResults(results))
         return 0
 
     # Process results of model inference to determine which symbol is most likely the result
     def ProcessInferenceResults(self, results):
         print("Processing Inference Results")
-        print(results.xyxy[0])  # predictions (tensor)
+        #print(results.xyxy[0])  # predictions (tensor)
         print(results.pandas().xyxy[0])  # predictions (pandas)
-        return 0
+        labels, cord = results.xyxyn[0][:, -1].to('cpu').numpy(), results.xyxyn[0][:, :-1].to('cpu').numpy()
+        print(labels) # Yoink labels
+        print(cord) # Coords for each detected label
+        return labels
 
     # Make use of processed results to create an output string to be sent back to RPi
     def SetupResultString(self, results):
         print("Setup Result Message")
+        # Do stuff with passed labels
         return "test"
