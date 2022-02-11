@@ -20,7 +20,7 @@ ANNOTATION_CLASSES = ['1_blue', '2_green', '3_red', '4_white', '5_yellow', '6_bl
 NUM_CLASSES = 31
 
 # DEBUG Parameters
-DEBUG_MODE_ON = True
+DEBUG_MODE_ON = False#True
 
 # Main runtime
 def main():
@@ -37,28 +37,31 @@ def IRS_Server():
 
     sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     sock.connect(("192.168.10.10", 3333))
+    #connection = sock.makefile('rb')
     #sock.listen(2)
 
+    print("Pinging RPi")
     sock.send(bytes("IRS Pinging RPi", 'utf-8'))
 
     # Ready to receive images
     while True:
-        print("Receiving File Name")
         #imgNum = recv_w_timeout(sock, 1)
+        print("\n Get Image Details from Server")
+        # Get image file name from RPi over socket connection
         RECEIVER_FILE_PATH = RECEIVER_PATH + sock.recv(1024).decode('utf-8') + '.jpg'
-        #print(imgNum.decode('utf-8'))
-        print("Data Received")
-
+        print("File Path Set: " + RECEIVER_FILE_PATH)
+        # Get image file from RPi over socket connection
         getFileFromRPi(sock, RECEIVER_FILE_PATH)
-        # Get result from processed image
+        # Initialize model
         sr = SymRec(WEIGHT_PATH, ANNOTATION_CLASSES, NUM_CLASSES)
-        #msg = sr.ProcessSourceImages(IMAGE_PATH)
+        # Get result from processed image
         msg = sr.ProcessSourceImages(RECEIVER_FILE_PATH)
         print("Detected: " + msg)
         sock.send(bytes(msg, 'utf-8'))
 
     # Close the socket after use
     sock.close()
+    #connection.close()
 
 def getFileFromRPi(sock, path):
     with open(path, "wb") as f:
@@ -76,7 +79,7 @@ def recv_w_timeout(sock, timeout = 1, enableIdleTimemout = True):
     sock.setblocking(0)
     # Data buffers
     total_data = []
-    data = '';
+    data = ''
     # Track time for checking timeouts
     startTime = time.time()
     # Loop to grab data from stream
