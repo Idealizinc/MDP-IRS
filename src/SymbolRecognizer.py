@@ -29,10 +29,11 @@ class SymbolRecognizer:
         print("\nYOLOv5 Model initiallized with weight: " + weightPath)
 
     # Run inference on the source images in the path with the model
-    def ProcessSourceImages(self, srcPath):
-        # Conduct Inference
+    def ProcessSourceImages(self, srcPath, savePath = "runs/detect/exp", saveImg = False):
+        # Conduct Inferencez
         results = self.Model(srcPath)
-        #results.save()  # or .show()
+        if saveImg:
+            results.save(save_dir = savePath)
         results.show()
         outputMessage = self.SetupResultString(self.ProcessInferenceResults(results))
         return outputMessage
@@ -40,21 +41,15 @@ class SymbolRecognizer:
     # Process results of model inference to determine which symbol is most likely the result
     def ProcessInferenceResults(self, results):
         print("\nProcessing Inference Results")
-        #print(results.xyxy[0])  # predictions (tensor)
         print(results.pandas().xyxy[0])  # predictions (pandas)
-        labels, coord = results.xyxyn[0][:, -1].to('cpu').numpy(), results.xyxyn[0][:, :-1].to('cpu').numpy()
-        #print(labels) # Yoink labels
-        #print(coord) # Coords for each detected label
+        labels, coord = results.xyxy[0][:, -1].to('cpu').numpy(), results.xyxy[0][:, :-1].to('cpu').numpy()
         # Area calculations
-        if False: # Skipping this section first
-            areaList = []
-            #print(coord)
-            for i in range(len(coord)): # Finding area is bugged
-                y = coord[i][2] - coord[i][1] # Accessing coord values is a problem
-                print(coord[i][2], coord[i][1])
-                x = coord[i][3] - coord[i][0]
-                areaList.append(x * y)
-            print(areaList)
+        areaList = []
+        for i in range(len(coord)):
+            x = coord[i][2] - coord[i][0] 
+            y = coord[i][3] - coord[i][1]
+            areaList.append(x * y) # Area of bounding box
+        print("Area for each bound: " + ' '.join([str(area) for area in areaList]))
         return labels
 
     # Make use of processed results to create an output string to be sent back to RPi
