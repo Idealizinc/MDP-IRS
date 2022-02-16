@@ -23,8 +23,12 @@ NUM_CLASSES = 31
 DEBUG_MODE_ON = False#True
 
 # System Settings
+CONNECTION_RETRY_TIMEOUT = 1
 SAVE_RESULTS = True
 SAVE_PATH = '../inferences/'
+
+# Global Parameters
+RPisock = None # Socket of RPi
 
 # Main runtime
 def main():
@@ -45,21 +49,33 @@ def connectToRPi():
     print("Pinging RPi")
     sock.send(bytes("IRS Pinging RPi", 'utf-8'))
 
+    return sock
+
 def disconnectFromRPi():
     # Close the socket after use
-    sock.close()
+    RPisock.close()
     #connection.close()
 
 def serverProcess():
-    connectToRPi()
-    # Ready to receive images
-    try:
-        while True:
-            if receiveImage() == "STOP":
-                break
-            processReceivedImage()
-    finally:
-        disconnectFromRPi()
+    # Loop to keep trying to connect to RPi
+    while True:
+        try:
+            print("Attempting Connection with RPi")
+            RPisock = connectToRPi()
+            # Ready to receive images
+            while RPISock != None:
+                print("Checking for receivable image")
+                try:
+                    if receiveImage() == "STOP":
+                        break
+                    processReceivedImage()
+                    time.sleep(CONNECTION_RETRY_TIMEOUT)
+                except (ValueError, Exception):
+                    print("Error in receiving image")
+        except (ValueError, Exception):
+            print("Cannot connect to RPi. Retrying in: " + str(CONNECTION_RETRY_TIMEOUT) + " second(s)\n")
+            time.sleep(CONNECTION_RETRY_TIMEOUT)
+    disconnectFromRPi()
 
 def receiveImage():
     print("\n Get Image Details from Server")
