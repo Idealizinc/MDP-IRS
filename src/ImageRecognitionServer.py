@@ -1,8 +1,8 @@
 # ImageRecognitionServer - Server that receives and stores images from RPi
 # @author Lim Rui An, Ryan
-# @version 1.0
+# @version 1.2
 # @since 2022-02-10
-# @modified 2022-02-10
+# @modified 2022-02-15
 
 from SymbolRecognizer import SymbolRecognizer as SymRec
 from pcComm import *
@@ -22,46 +22,63 @@ NUM_CLASSES = 31
 # DEBUG Parameters
 DEBUG_MODE_ON = False#True
 
+# System Settings
+SAVE_RESULTS = True
+SAVE_PATH = '../inferences/'
+
 # Main runtime
 def main():
     if DEBUG_MODE_ON:
         sr = SymRec(WEIGHT_PATH, ANNOTATION_CLASSES, NUM_CLASSES)
-        msg = sr.ProcessSourceImages(IMAGE_PATH, '../inferences/', True)
+        msg = sr.ProcessSourceImages(IMAGE_PATH, SAVE_PATH, SAVE_RESULTS)
         print("Detected: " + msg)
-    else: IRS_Server()
+    else: serverProcess()
 
-def IRS_Server():
+def connectToRPi():
     # Connect to RPi
     pc_obj = pc()
     pc_obj.connect()
 
     sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     sock.connect(("192.168.10.10", 3333))
-    #connection = sock.makefile('rb')
-    #sock.listen(2)
 
     print("Pinging RPi")
     sock.send(bytes("IRS Pinging RPi", 'utf-8'))
 
-    # Ready to receive images
-    while True:
-        #imgNum = recv_w_timeout(sock, 1)
-        print("\n Get Image Details from Server")
-        # Get image file name from RPi over socket connection
-        RECEIVER_FILE_PATH = RECEIVER_PATH + sock.recv(1024).decode('utf-8') + '.jpg'
-        print("File Path Set: " + RECEIVER_FILE_PATH)
-        # Get image file from RPi over socket connection
-        getFileFromRPi(sock, RECEIVER_FILE_PATH)
-        # Initialize model
-        sr = SymRec(WEIGHT_PATH, ANNOTATION_CLASSES, NUM_CLASSES)
-        # Get result from processed image
-        msg = sr.ProcessSourceImages(RECEIVER_FILE_PATH)
-        print("Detected: " + msg)
-        sock.send(bytes(msg, 'utf-8'))
-
+def disconnectFromRPi():
     # Close the socket after use
     sock.close()
     #connection.close()
+
+def serverProcess():
+    connectToRPi()
+    # Ready to receive images
+    try:
+        while True:
+            if receiveImage() == "STOP":
+                break
+            processReceivedImage()
+    finally:
+        disconnectFromRPi()
+
+def receiveImage():
+    print("\n Get Image Details from Server")
+    # Get image file name from RPi over socket connection
+    RPiMessage = sock.recv(1024).decode('utf-8')
+    RECEIVER_FILE_PATH = RECEIVER_PATH + RPiMessage + '.jpg'
+    print("File Path Set: " + RECEIVER_FILE_PATH)
+    # Get image file from RPi over socket connection
+    getFileFromRPi(sock, RECEIVER_FILE_PATH)
+    return RPiMessage
+
+def processReceivedImage():
+    # Initialize model
+    sr = SymRec(WEIGHT_PATH, ANNOTATION_CLASSES, NUM_CLASSES)
+    # Get result from processed image
+    msg = sr.ProcessSourceImages(RECEIVER_FILE_PATH, SAVE_PATH, SAVE_RESULTS)
+    print("Detected: " + msg)
+    # Send results to RPi
+    sock.send(bytes(msg, 'utf-8'))
 
 def getFileFromRPi(sock, path):
     with open(path, "wb") as f:
