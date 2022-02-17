@@ -5,7 +5,9 @@
 # @modified 2022-02-15
 
 from SymbolRecognizer import SymbolRecognizer as SymRec
-from pcComm import *
+#from pcComm import *
+import socket
+import time
 
 # Constant PATH variables
 WEIGHT_PATH = "../weights/e40b16v8best.pt"
@@ -40,16 +42,16 @@ def main():
 
 def connectToRPi():
     # Connect to RPi
-    pc_obj = pc()
-    pc_obj.connect()
+    #pc_obj = pc()
+    #pc_obj.connect()
 
-    sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-    sock.connect(("192.168.10.10", 3333))
+    RPisock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    RPisock.connect(("192.168.10.10", 3333))
 
     print("Pinging RPi")
-    sock.send(bytes("IRS Pinging RPi", 'utf-8'))
+    RPisock.send(bytes("IRS Pinging RPi", 'utf-8'))
 
-    return sock
+    #return sock
 
 def disconnectFromRPi():
     # Close the socket after use
@@ -58,29 +60,72 @@ def disconnectFromRPi():
 
 def serverProcess():
     # Loop to keep trying to connect to RPi
-    while True:
+    #while True:
+    #try: 
+    print("Attempting Connection with RPi")
+    global RPisock
+    RPisock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    RPisock.connect(("192.168.10.10", 3333))
+
+    print("Pinging RPi")
+    RPisock.send(bytes("IRS Pinging RPi", 'utf-8'))
+    print(RPisock)
+    # Ready to receive images
+    while RPisock != None:
+        print("Checking for receivable image")
+        # Try to receive image
         try:
-            print("Attempting Connection with RPi")
-            RPisock = connectToRPi()
-            # Ready to receive images
-            while RPISock != None:
-                print("Checking for receivable image")
-                try:
-                    if receiveImage() == "STOP":
-                        break
-                    processReceivedImage()
-                    time.sleep(CONNECTION_RETRY_TIMEOUT)
-                except (ValueError, Exception):
-                    print("Error in receiving image")
+            receiveImage(RPisock)
+            processFlag = True
         except (ValueError, Exception):
-            print("Cannot connect to RPi. Retrying in: " + str(CONNECTION_RETRY_TIMEOUT) + " second(s)\n")
+            processFlag = False
+            print("No image to receive")
             time.sleep(CONNECTION_RETRY_TIMEOUT)
+        # Try to process image
+        try:
+            if processFlag:
+                processReceivedImage()
+                break
+        except (ValueError, Exception):
+            print("Error processing image " )
+            time.sleep(CONNECTION_RETRY_TIMEOUT)
+    RPisock.close()
+
+def serverProcess2():
+    # Loop to keep trying to connect to RPi
+    #while True:
+    #try:
+    print("Attempting Connection with RPi")
+    RPisock = connectToRPi()
+    # Ready to receive images
+    while RPisock != None:
+        print("Checking for receivable image")
+        try: # Try to receive image
+            #if receiveImage() == "STOP": # If the image name is STOP then stop the server
+            #    break
+            receiveImage(RPisock)
+            processFlag = True
+        except (ValueError, Exception):
+            print("Error receiving image ")
+            processFlag = False
+            time.sleep(CONNECTION_RETRY_TIMEOUT)
+        try: # Try to process image
+            if processFlag:
+                processReceivedImage()
+        except (ValueError, Exception):
+            print("Error processing image " )
+            time.sleep(CONNECTION_RETRY_TIMEOUT)
+        #except (ValueError, Exception):
+        #    print("Cannot connect to RPi. Retrying in: " + str(CONNECTION_RETRY_TIMEOUT) + " second(s)\n")
+        #    time.sleep(CONNECTION_RETRY_TIMEOUT)
     disconnectFromRPi()
 
-def receiveImage():
-    print("\n Get Image Details from Server")
+def receiveImage(sock):
+    global RECEIVER_FILE_PATH
+    print("\nGet Image Details from Server")
     # Get image file name from RPi over socket connection
     RPiMessage = sock.recv(1024).decode('utf-8')
+    print("RPI MESSAGE: " + RPiMessage)
     RECEIVER_FILE_PATH = RECEIVER_PATH + RPiMessage + '.jpg'
     print("File Path Set: " + RECEIVER_FILE_PATH)
     # Get image file from RPi over socket connection
@@ -92,9 +137,9 @@ def processReceivedImage():
     sr = SymRec(WEIGHT_PATH, ANNOTATION_CLASSES, NUM_CLASSES)
     # Get result from processed image
     msg = sr.ProcessSourceImages(RECEIVER_FILE_PATH, SAVE_PATH, SAVE_RESULTS)
-    print("Detected: " + msg)
+    print("TARGET," + msg) # TODO: Change class name to class id
     # Send results to RPi
-    sock.send(bytes(msg, 'utf-8'))
+    RPisock.send(bytes(msg, 'utf-8'))
 
 def getFileFromRPi(sock, path):
     with open(path, "wb") as f:
