@@ -31,24 +31,25 @@ SAVE_PATH = '../inferences/'
 
 # Global Parameters
 RPisock = None # Socket of RPi
+SymbolRec = None # Symbol Recognizer
 
 # Main runtime
 def main():
+    # Initialize Recognizer
+    global SymbolRec
+     # Initialize model
+    SymbolRec = SymRec(WEIGHT_PATH, ANNOTATION_CLASSES, NUM_CLASSES)
+
     if DEBUG_MODE_ON:
-        sr = SymRec(WEIGHT_PATH, ANNOTATION_CLASSES, NUM_CLASSES)
-        msg = sr.ProcessSourceImages(IMAGE_PATH, SAVE_PATH, SAVE_RESULTS)
+        msg = SymbolRec.ProcessSourceImages(IMAGE_PATH, SAVE_PATH, SAVE_RESULTS)
         print("Detected: " + msg)
     else: serverProcess()
 
 def connectToRPi():
-    # Connect to RPi
-    #pc_obj = pc()
-    #pc_obj.connect()
-
+    # Connect to RPi via a socket
     RPisock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     RPisock.connect(("192.168.10.10", 3333))
-
-    print("Pinging RPi")
+    # Ping the RPi to tell it that the IRS is connected
     RPisock.send(bytes("IRS Pinging RPi", 'utf-8'))
 
     #return sock
@@ -59,35 +60,31 @@ def disconnectFromRPi():
     #connection.close()
 
 def serverProcess():
-    # Loop to keep trying to connect to RPi
-    #while True:
-    #try: 
+    # Trying to connect to RPi
     print("Attempting Connection with RPi")
     global RPisock
     RPisock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     RPisock.connect(("192.168.10.10", 3333))
 
-    print("Pinging RPi")
+    # Ping the RPi
     RPisock.send(bytes("IRS Pinging RPi", 'utf-8'))
     print(RPisock)
     # Ready to receive images
     while RPisock != None:
         print("Checking for receivable image")
-        # Try to receive image
-        try:
+        try: # Try to receive image
             receiveImage(RPisock)
             processFlag = True
         except (ValueError, Exception):
             processFlag = False
             print("No image to receive")
             time.sleep(CONNECTION_RETRY_TIMEOUT)
-        # Try to process image
-        try:
+        try: # Try to process image
             if processFlag:
                 processReceivedImage()
-                break
+                break # TEMP: For A2 single process 
         except (ValueError, Exception):
-            print("Error processing image " )
+            print("Error processing image")
             time.sleep(CONNECTION_RETRY_TIMEOUT)
     RPisock.close()
 
@@ -133,10 +130,9 @@ def receiveImage(sock):
     return RPiMessage
 
 def processReceivedImage():
-    # Initialize model
-    sr = SymRec(WEIGHT_PATH, ANNOTATION_CLASSES, NUM_CLASSES)
+    global SymbolRec
     # Get result from processed image
-    msg = sr.ProcessSourceImages(RECEIVER_FILE_PATH, SAVE_PATH, SAVE_RESULTS)
+    msg = SymbolRec.ProcessSourceImages(RECEIVER_FILE_PATH, SAVE_PATH, SAVE_RESULTS)
     print("TARGET," + msg) # TODO: Change class name to class id
     # Send results to RPi
     RPisock.send(bytes(msg, 'utf-8'))
@@ -144,19 +140,19 @@ def processReceivedImage():
 def getFileFromRPi(sock, path):
     with open(path, "wb") as f:
         # read bytes from the socket (receive)
-        print("Receiving Data")
+        print("Receiving data from RPi")
         bytes_read = recv_w_timeout(sock, 1)
-        print("Data Received")
+        print("Data received from RPi")
         # write to the file the bytes we just received
         for i in range(len(bytes_read)):
             f.write(bytes_read[i])
-        print("File write done")
+        print("Image file write completed")
 
 def recv_w_timeout(sock, timeout = 1, enableIdleTimemout = True):
     # Make socket non-blocking
     sock.setblocking(0)
     # Data buffers
-    total_data = []
+    total_data = [] # List of bytes
     data = ''
     # Track time for checking timeouts
     startTime = time.time()

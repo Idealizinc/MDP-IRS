@@ -24,7 +24,8 @@ class SymbolRecognizer:
         # Set the current weight to be the status
         self.ModelStatus = weightPath
         # Initialize the model
-        self.Model = torch.hub.load('ultralytics/yolov5', 'custom', path = weightPath)
+        #self.Model = torch.hub.load('ultralytics/yolov5', 'custom', path = weightPath)
+        self.Model = torch.hub.load('../yolov5/', 'custom', path=weightPath, source='local')
         # Print status
         print("\nYOLOv5 Model initiallized with weight: " + weightPath)
 
