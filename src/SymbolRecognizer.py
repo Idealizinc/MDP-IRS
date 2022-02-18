@@ -15,6 +15,7 @@ class SymbolRecognizer:
 
     # Class constuctor to setup weights
     def __init__(self, weightPath, classes, numclasses, useGPU = True):
+        print("> Begin initiallization of YOLOv5 Model")
         self.LoadWeights(weightPath, useGPU)
         self.Classes = classes
         self.ClassCount = numclasses
@@ -29,7 +30,7 @@ class SymbolRecognizer:
             self.Model = torch.hub.load('../yolov5/', 'custom', path=weightPath, source='local')
         else: self.Model = torch.hub.load('../yolov5/', 'custom', path=weightPath, source='local', device='cpu')
         # Print status
-        print("\nYOLOv5 Model initiallized with weight: " + weightPath)
+        print("\nYOLOv5 Model initiallized with weight: " + weightPath + "\n")
 
     # Run inference on the source images in the path with the model
     def ProcessSourceImages(self, srcPath, savePath = "runs/detect/exp", saveImg = False):
@@ -43,7 +44,7 @@ class SymbolRecognizer:
 
     # Process results of model inference to determine which symbol is most likely the result
     def ProcessInferenceResults(self, results):
-        print("\nProcessing Inference Results")
+        print("\n> Processing Inference Results")
         print(results.pandas().xyxy[0])  # predictions (pandas)
         labels, coord = results.xyxy[0][:, -1].to('cpu').numpy(), results.xyxy[0][:, :-1].to('cpu').numpy()
         # Area calculations
@@ -52,16 +53,21 @@ class SymbolRecognizer:
             x = coord[i][2] - coord[i][0] 
             y = coord[i][3] - coord[i][1]
             areaList.append(x * y) # Area of bounding box
-        print("Area for each bound: " + ' '.join([str(area) for area in areaList]))
+        print("> Area for each bound: " + ' '.join([str(area) for area in areaList]))
         return labels
 
     # Make use of processed results to create an output string to be sent back to RPi
     def SetupResultString(self, results):
-        print("\nSetting Up Result Message")
-        # Do stuff with passed labels
-        label = "No Symbol Detected"
-        for idx in results:
+        print("\n> Setting Up Result Message")
+        # TODO: Do stuff with passed labels 
+        label = "NoDetection"
+        for idx in range(len(results)):
             i = int(idx)
-            if (label[i] != "bullseye"):
-                label = self.Classes[i]
+            tag = self.Classes[int(results[i])]
+            if (tag != "bullseye"): # If it is a valid symbol write to the label
+                label = tag
+                #print("Set Symbol")
+            elif (label[i] != "NoDetection"):
+                label = tag
+                #print("Set Bullseye")
         return label

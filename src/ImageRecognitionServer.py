@@ -12,7 +12,7 @@ import time
 # Constant PATH variables
 WEIGHT_PATH = "../weights/e40b16v8best.pt"
 YOLO_PATH = "../yolov5"
-IMAGE_PATH = "../testimg/5_20.jpg"
+IMAGE_PATH = "../testimg/1_5.jpg"
 
 RECEIVER_PATH = "../receivedimg/"
 RECEIVER_FILE_PATH = RECEIVER_PATH + 'out.jpg'
@@ -22,13 +22,13 @@ ANNOTATION_CLASSES = ['1_blue', '2_green', '3_red', '4_white', '5_yellow', '6_bl
 NUM_CLASSES = 31
 
 # DEBUG Parameters
-DEBUG_MODE_ON = False #False #True
+DEBUG_MODE_ON = True #False #True
 
 # System Settings
 CONNECTION_RETRY_TIMEOUT = 1
 SAVE_RESULTS = True
 SAVE_PATH = '../inferences/'
-USE_GPU = True
+USE_GPU = False
 
 # Global Parameters
 RPisock = None # Socket of RPi
@@ -47,7 +47,7 @@ def main():
 
 def serverProcess():
     # Trying to connect to RPi
-    print("Attempting Connection with RPi")
+    print("> Attempting Connection with RPi")
     global RPisock
     RPisock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     RPisock.connect(("192.168.10.10", 3333))
@@ -57,7 +57,7 @@ def serverProcess():
 
     # Ready to receive images
     while RPisock != None:
-        print("Checking for receivable image")
+        print("> Checking for receivable image")
         try: # Try to receive image
             receiveImage(RPisock)
             processFlag = True
@@ -68,7 +68,7 @@ def serverProcess():
         try: # Try to process image
             if processFlag:
                 processReceivedImage()
-                break # TEMP: For A2 single process 
+                # break # TEMP: For A2 single process 
         except (ValueError, Exception):
             print("Error processing image")
             time.sleep(CONNECTION_RETRY_TIMEOUT)
@@ -78,7 +78,7 @@ def serverProcess():
 
 def receiveImage(sock):
     global RECEIVER_FILE_PATH
-    print("\nGet Image Details from Server")
+    print("\n> Get Image Details from Server")
     # Get image file name from RPi over socket connection
     RPiMessage = sock.recv(1024).decode('utf-8')
     print("RPI MESSAGE: " + RPiMessage)
