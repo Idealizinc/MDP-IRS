@@ -22,7 +22,7 @@ ANNOTATION_CLASSES = ['1_blue', '2_green', '3_red', '4_white', '5_yellow', '6_bl
 NUM_CLASSES = 31
 
 # DEBUG Parameters
-DEBUG_MODE_ON = True #False #True
+DEBUG_MODE_ON = False #False #True
 
 # System Settings
 CONNECTION_RETRY_TIMEOUT = 1
@@ -36,29 +36,14 @@ SymbolRec = None # Symbol Recognizer
 
 # Main runtime
 def main():
-    # Initialize Recognizer
+    # Initialize Global Recognizer used for all images
     global SymbolRec
-     # Initialize model
     SymbolRec = SymRec(WEIGHT_PATH, ANNOTATION_CLASSES, NUM_CLASSES, USE_GPU)
 
     if DEBUG_MODE_ON:
         msg = SymbolRec.ProcessSourceImages(IMAGE_PATH, SAVE_PATH, SAVE_RESULTS)
         print("Detected: " + msg)
     else: serverProcess()
-
-def connectToRPi():
-    # Connect to RPi via a socket
-    RPisock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-    RPisock.connect(("192.168.10.10", 3333))
-    # Ping the RPi to tell it that the IRS is connected
-    RPisock.send(bytes("IRS Pinging RPi", 'utf-8'))
-
-    #return sock
-
-def disconnectFromRPi():
-    # Close the socket after use
-    RPisock.close()
-    #connection.close()
 
 def serverProcess():
     # Trying to connect to RPi
@@ -67,9 +52,9 @@ def serverProcess():
     RPisock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     RPisock.connect(("192.168.10.10", 3333))
 
-    # Ping the RPi
+    # Ping the RPi to test connection
     RPisock.send(bytes("IRS Pinging RPi", 'utf-8'))
-    print(RPisock)
+
     # Ready to receive images
     while RPisock != None:
         print("Checking for receivable image")
@@ -87,36 +72,9 @@ def serverProcess():
         except (ValueError, Exception):
             print("Error processing image")
             time.sleep(CONNECTION_RETRY_TIMEOUT)
-    RPisock.close()
 
-def serverProcess2():
-    # Loop to keep trying to connect to RPi
-    #while True:
-    #try:
-    print("Attempting Connection with RPi")
-    RPisock = connectToRPi()
-    # Ready to receive images
-    while RPisock != None:
-        print("Checking for receivable image")
-        try: # Try to receive image
-            #if receiveImage() == "STOP": # If the image name is STOP then stop the server
-            #    break
-            receiveImage(RPisock)
-            processFlag = True
-        except (ValueError, Exception):
-            print("Error receiving image ")
-            processFlag = False
-            time.sleep(CONNECTION_RETRY_TIMEOUT)
-        try: # Try to process image
-            if processFlag:
-                processReceivedImage()
-        except (ValueError, Exception):
-            print("Error processing image " )
-            time.sleep(CONNECTION_RETRY_TIMEOUT)
-        #except (ValueError, Exception):
-        #    print("Cannot connect to RPi. Retrying in: " + str(CONNECTION_RETRY_TIMEOUT) + " second(s)\n")
-        #    time.sleep(CONNECTION_RETRY_TIMEOUT)
-    disconnectFromRPi()
+    # Close the socket when we're done
+    RPisock.close()
 
 def receiveImage(sock):
     global RECEIVER_FILE_PATH
@@ -163,14 +121,13 @@ def recv_w_timeout(sock, timeout = 1, enableIdleTimemout = True):
         if total_data and time.time() - startTime > timeout:
             break
         # If no data has been received, wait a bit more before timing out
-        elif enableIdleTimemout and time.time() - startTime > timeout * 2: # MIGHT NOT NEED THIS
+        elif enableIdleTimemout and time.time() - startTime > timeout * 2: # Used to prevent indefinite timeout
             break
         # Try to receive Data
         try:
             data = sock.recv(2048) # Byte buffer size
             if data: # Valid data attained
-                #total_data.append(data.decode('utf-8'))
-                total_data.append(data)
+                total_data.append(data) #(data.decode('utf-8'))
                 # Reset timeout start time
                 startTime = time.time()
             else:
@@ -180,7 +137,7 @@ def recv_w_timeout(sock, timeout = 1, enableIdleTimemout = True):
             pass
     # Concatenate the received data and return it
     #return ''.join(total_data)
-    return total_data
+    return total_data # Returns a list of bytes
 
 def data_to_str(data):
     str = ""
