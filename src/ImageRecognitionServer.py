@@ -28,7 +28,7 @@ DEBUG_MODE_ON = True #False #True
 CONNECTION_RETRY_TIMEOUT = 1
 SAVE_RESULTS = True
 SAVE_PATH = '../inferences/'
-USE_GPU = False
+USE_GPU = True
 
 # Global Parameters
 RPisock = None # Socket of RPi
@@ -41,8 +41,9 @@ def main():
     SymbolRec = SymRec(WEIGHT_PATH, ANNOTATION_CLASSES, NUM_CLASSES, USE_GPU)
 
     if DEBUG_MODE_ON:
+        startTime = time.time()
         msg = SymbolRec.ProcessSourceImages(IMAGE_PATH, SAVE_PATH, SAVE_RESULTS)
-        print("Detected: " + msg)
+        print("Detected: " + msg + " | Time taken: " + "{:.2f}s".format(time.time() - startTime))
     else: serverProcess()
 
 def serverProcess():

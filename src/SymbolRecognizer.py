@@ -53,21 +53,21 @@ class SymbolRecognizer:
             x = coord[i][2] - coord[i][0] 
             y = coord[i][3] - coord[i][1]
             areaList.append(x * y) # Area of bounding box
-        print("> Area for each bound: " + ' '.join([str(area) for area in areaList]))
+        print("Area for each bound: " + ' '.join([str(area) for area in areaList]))
         return labels
 
     # Make use of processed results to create an output string to be sent back to RPi
     def SetupResultString(self, results):
         print("\n> Setting Up Result Message")
         # TODO: Do stuff with passed labels 
-        label = "NoDetection"
+        label = "Nothing"
         for idx in range(len(results)):
             i = int(idx)
             tag = self.Classes[int(results[i])]
             if (tag != "bullseye"): # If it is a valid symbol write to the label
                 label = tag
                 #print("Set Symbol")
-            elif (label[i] != "NoDetection"):
+            elif (label[i] != "Nothing"):
                 label = tag
                 #print("Set Bullseye")
         return label
