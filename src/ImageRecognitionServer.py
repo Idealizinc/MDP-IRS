@@ -22,12 +22,13 @@ ANNOTATION_CLASSES = ['1_blue', '2_green', '3_red', '4_white', '5_yellow', '6_bl
 NUM_CLASSES = 31
 
 # DEBUG Parameters
-DEBUG_MODE_ON = False#True
+DEBUG_MODE_ON = True #False #True
 
 # System Settings
 CONNECTION_RETRY_TIMEOUT = 1
 SAVE_RESULTS = True
 SAVE_PATH = '../inferences/'
+USE_GPU = True
 
 # Global Parameters
 RPisock = None # Socket of RPi
@@ -38,7 +39,7 @@ def main():
     # Initialize Recognizer
     global SymbolRec
      # Initialize model
-    SymbolRec = SymRec(WEIGHT_PATH, ANNOTATION_CLASSES, NUM_CLASSES)
+    SymbolRec = SymRec(WEIGHT_PATH, ANNOTATION_CLASSES, NUM_CLASSES, USE_GPU)
 
     if DEBUG_MODE_ON:
         msg = SymbolRec.ProcessSourceImages(IMAGE_PATH, SAVE_PATH, SAVE_RESULTS)
