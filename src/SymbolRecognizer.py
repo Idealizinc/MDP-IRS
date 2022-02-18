@@ -1,11 +1,14 @@
-# SymbolRecognizer - Recognizes symbols from input images using a weighted YOLOv5 Model
-# @author Lim Rui An, Ryan
-# @version 1.0
-# @since 2022-02-10
-# @modified 2022-02-10
+'''
+SymbolRecognizer - Recognizes symbols from input images using a weighted YOLOv5 Model
+@author Lim Rui An, Ryan
+@version 1.2
+@since 2022-02-10
+@modified 2022-02-18
+'''
 
 # Imported dependencies
 import torch # For the inference model
+import pandas as pd # For processing purposes
 
 class SymbolRecognizer:
     ModelStatus = "nil"
@@ -48,26 +51,36 @@ class SymbolRecognizer:
         print(results.pandas().xyxy[0])  # predictions (pandas)
         labels, coord = results.xyxy[0][:, -1].to('cpu').numpy(), results.xyxy[0][:, :-1].to('cpu').numpy()
         # Area calculations
-        areaList = []
+        heightList = []
         for i in range(len(coord)):
-            x = coord[i][2] - coord[i][0] 
+            #x = coord[i][2] - coord[i][0]
             y = coord[i][3] - coord[i][1]
-            areaList.append(x * y) # Area of bounding box
-        print("Area for each bound: " + ' '.join([str(area) for area in areaList]))
-        return labels
+            #areaList.append(x * y) # Area of bounding box
+            heightList.append(y) # Height of bounding box
+        print("Height for each bound: " + ' '.join([str(Height) for Height in heightList]))
+        labelswithheight = pd.DataFrame({'labels' : labels, 'height' : heightList})
+        return labelswithheight
 
     # Make use of processed results to create an output string to be sent back to RPi
     def SetupResultString(self, results):
         print("\n> Setting Up Result Message")
-        # TODO: Do stuff with passed labels 
+        # Return the label that has the greatest vertical height
         label = "Nothing"
+        maxHeight = -1
+        bullseyeFound = False
+        labels = results["labels"]
+        height = results["height"]
+        # Loop through the dataframe and return the symbol name (not bullseye) with the greatest height
         for idx in range(len(results)):
-            i = int(idx)
-            tag = self.Classes[int(results[i])]
-            if (tag != "bullseye"): # If it is a valid symbol write to the label
+            i = idx
+            tag = self.Classes[int(labels[i])]
+             # Found one that isn't a bullseye and having a greater max height
+            if tag != 'bullseye' and height[i] > maxHeight:
+                maxHeight = height[i]
                 label = tag
-                #print("Set Symbol")
-            elif (label[i] != "Nothing"):
-                label = tag
-                #print("Set Bullseye")
+            elif tag == 'bullseye':
+                bullseyeFound = True
+        # If there was no tallest symbol but a bullseye was found
+        if label == "Nothing" and bullseyeFound:
+            label = 'bullseye'
         return label
