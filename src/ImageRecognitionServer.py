@@ -14,7 +14,7 @@ import time
 # Constant PATH variables
 WEIGHT_PATH = "../weights/e40b16v8best.pt"
 YOLO_PATH = "../yolov5"
-IMAGE_PATH = "../testimg/4_6.jpg"
+IMAGE_PATH = "../testimg/2173.jpg"
 
 RECEIVER_PATH = "../receivedimg/"
 RECEIVER_FILE_PATH = RECEIVER_PATH + 'out.jpg'
@@ -95,7 +95,7 @@ def processReceivedImage():
     global SymbolRec
     # Get result from processed image
     msg = SymbolRec.ProcessSourceImages(RECEIVER_FILE_PATH, SAVE_PATH, SAVE_RESULTS)
-    print("TARGET," + msg) # TODO: Change class name to class id
+    print("TARGET," + msg)
     # Send results to RPi
     RPisock.send(bytes(msg, 'utf-8'))
 
