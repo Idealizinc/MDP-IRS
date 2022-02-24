@@ -32,6 +32,8 @@ class SymbolRecognizer:
         if useGPU:
             self.Model = torch.hub.load('../yolov5/', 'custom', path=weightPath, source='local')
         else: self.Model = torch.hub.load('../yolov5/', 'custom', path=weightPath, source='local', device='cpu')
+        # Set acceptable confidence
+        self.Model.conf = 0.75  # NMS confidence threshold
         # Print status
         print("\nYOLOv5 Model initiallized with weight: " + weightPath + "\n")
 
