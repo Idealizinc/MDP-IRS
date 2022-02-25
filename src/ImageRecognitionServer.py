@@ -10,6 +10,7 @@ from SymbolRecognizer import SymbolRecognizer as SymRec
 #from pcComm import *
 import socket
 import time
+#import keyboard
 
 # Constant PATH variables
 WEIGHT_PATH = "../weights/e40b16v8best.pt"
@@ -30,7 +31,7 @@ SAVE_RESULTS = True
 USE_GPU = True
 
 # DEBUG Parameters
-DEBUG_MODE_ON = False #False #True
+DEBUG_MODE_ON = True #False #True
 
 # Global Parameters
 SymbolRec = None # Symbol Recognizer

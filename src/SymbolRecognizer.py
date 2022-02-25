@@ -15,6 +15,7 @@ class SymbolRecognizer:
     Model = None
     Classes = None
     ClassCount = -1
+    ProcessAsRatio = True # Return the processing results as a ratio instead of pixels
 
     # Class constuctor to setup weights
     def __init__(self, weightPath, classes, numclasses, useGPU = True):
@@ -50,8 +51,15 @@ class SymbolRecognizer:
     # Process results of model inference to determine which symbol is most likely the result
     def ProcessInferenceResults(self, results):
         print("\n> Processing Inference Results")
-        print(results.pandas().xyxy[0])  # predictions (pandas)
-        labels, coord = results.xyxy[0][:, -1].to('cpu').numpy(), results.xyxy[0][:, :-1].to('cpu').numpy()
+        if self.ProcessAsRatio:
+            print(results.pandas().xyxyn[0])  # predictions (pandas)
+            labels, coord = results.xyxyn[0][:, -1].to('cpu').numpy(), results.xyxyn[0][:, :-1].to('cpu').numpy()
+        else:
+            print(results.pandas().xyxy[0])  # predictions (pandas)
+            labels, coord = results.xyxy[0][:, -1].to('cpu').numpy(), results.xyxy[0][:, :-1].to('cpu').numpy()
+        # TODO: Merge results into a dataframe of <label, coords>
+        # TODO: Get Dir Vec of bound from center
+
         # Area calculations
         heightList = []
         for i in range(len(coord)):
