@@ -1,9 +1,9 @@
 '''
 SymbolRecognizer - Recognizes symbols from input images using a weighted YOLOv5 Model
 @author Lim Rui An, Ryan
-@version 1.2
+@version 1.3
 @since 2022-02-10
-@modified 2022-02-18
+@modified 2022-03-01
 '''
 
 # Imported dependencies

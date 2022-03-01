@@ -1,43 +1,41 @@
 '''
 ImageRecognitionServer - Server that receives and stores images from RPi
 @author Lim Rui An, Ryan
-@version 1.2
+@version 1.3
 @since 2022-02-10
-@modified 2022-02-15
+@modified 2022-03-01
 '''
-
+# Required dependencies
 from SymbolRecognizer import SymbolRecognizer as SymRec
-#from pcComm import *
 import socket
 import time
-#import keyboard
 
 # Constant PATH variables
 WEIGHT_PATH = "../weights/"
 YOLO_PATH = "../yolov5"
-IMAGE_PATH = "../testimg/3_47.jpg"
+IMAGE_PATH = "../testimg/4170_fullbright.jpg"
 
 RECEIVER_PATH = "../receivedimg/"
 RECEIVER_FILE_PATH = RECEIVER_PATH + 'out.jpg'
 
 # Other Constants
 ANNOTATION_CLASSES = ['1_blue', '2_green', '3_red', '4_white', '5_yellow', '6_blue', '7_green', '8_red', '9_white', 'a_red', 'b_green', 'bullseye', 'c_white', 'circle_yellow', 'd_blue', 'down_arrow_red', 'e_yellow', 'f_red', 'g_green', 'h_white', 'left_arrow_blue', 'right_arrow_green', 's_blue', 't_yellow', 'u_red', 'up_arrow_white', 'v_green', 'w_white', 'x_blue', 'y_yellow', 'z_red']
-NUM_CLASSES = 31
+NUM_CLASSES = len(ANNOTATION_CLASSES)
 WEIGHTS = ['e40b16v8best.pt', 'E30_B16_TSv1.pt']
 
 # System Settings
-CONNECTION_RETRY_TIMEOUT = 0.5
-WEIGHT_SELECTION = 0 # Which weights file to load, refer to list above @ WEIGHTS
-SAVE_RESULTS = True
-SAVE_PATH = '../inferences/'
-USE_GPU = True
+CONNECTION_RETRY_TIMEOUT = 0.5      # How long to timeout in seconds
+WEIGHT_SELECTION = 0                # Which weights file to load, refer to list above @ WEIGHTS
+SAVE_RESULTS = True                 # Save result images in listed SAVE_PATH
+SAVE_PATH = '../inferences/'        # Location to save images to
+USE_GPU = True                      # Allow IRS to use GPU or CPU
 
 # DEBUG Parameters
-DEBUG_MODE_ON = True #False #True
+DEBUG_MODE_ON = True                # For local testing purposes, set to False for real use
 
 # Global Parameters
-SymbolRec = None # Symbol Recognizer
-RPisock = None # Socket of RPi
+SymbolRec = None                    # Symbol Recognizer
+RPisock = None                      # Socket of RPi
 
 # Main runtime
 def main():
@@ -65,7 +63,7 @@ def serverProcess():
     while RPisock != None:
         print("> Checking for receivable image")
         try: # Try to receive image
-            receiveImage(RPisock, CONNECTION_RETRY_TIMEOUT)
+            receiveImage(RPisock)
             processFlag = True
         except (ValueError, Exception):
             processFlag = False
@@ -106,14 +104,14 @@ def getFileFromRPi(sock, path):
     with open(path, "wb") as f:
         # read bytes from the socket (receive)
         print("Receiving data from RPi")
-        bytes_read = recv_w_timeout(sock, 1)
+        bytes_read = recvWithTimeout(sock, CONNECTION_RETRY_TIMEOUT)
         print("Data received from RPi")
         # write to the file the bytes we just received
         for i in range(len(bytes_read)):
             f.write(bytes_read[i])
         print("Image file write completed")
 
-def recv_w_timeout(sock, timeout = 1, enableIdleTimemout = True):
+def recvWithTimeout(sock, timeout = 1, enableIdleTimemout = True):
     # Make socket non-blocking
     sock.setblocking(0)
     # Data buffers
@@ -141,8 +139,6 @@ def recv_w_timeout(sock, timeout = 1, enableIdleTimemout = True):
                 time.sleep(0.1)
         except:
             pass
-    # Concatenate the received data and return it
-    #return ''.join(total_data)
     # Make socket blocking once more before returning
     sock.setblocking(1)
     return total_data # Returns a list of bytes
