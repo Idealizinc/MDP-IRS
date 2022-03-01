@@ -15,7 +15,7 @@ class SymbolRecognizer:
     Model = None
     Classes = None
     ClassCount = -1
-    ConfThreshold = 0.75 # NMS confidence threshold
+    ConfThreshold = 0.6 # NMS confidence threshold
 
     # Class constuctor to setup weights
     def __init__(self, weightPath, classes, numclasses, useGPU = True):
