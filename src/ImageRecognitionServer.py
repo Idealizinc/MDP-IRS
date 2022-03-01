@@ -10,6 +10,7 @@ from SymbolRecognizer import SymbolRecognizer as SymRec
 #from pcComm import *
 import socket
 import time
+#import keyboard
 
 # Constant PATH variables
 WEIGHT_PATH = "../weights/"
@@ -32,7 +33,7 @@ SAVE_PATH = '../inferences/'
 USE_GPU = True
 
 # DEBUG Parameters
-DEBUG_MODE_ON = False #False #True
+DEBUG_MODE_ON = True #False #True
 
 # Global Parameters
 SymbolRec = None # Symbol Recognizer
