@@ -12,9 +12,9 @@ import socket
 import time
 
 # Constant PATH variables
-WEIGHT_PATH = "../weights/e40b16v8best.pt"
+WEIGHT_PATH = "../weights/"
 YOLO_PATH = "../yolov5"
-IMAGE_PATH = "../testimg/2173.jpg"
+IMAGE_PATH = "../testimg/test.jpg"
 
 RECEIVER_PATH = "../receivedimg/"
 RECEIVER_FILE_PATH = RECEIVER_PATH + 'out.jpg'
@@ -22,11 +22,13 @@ RECEIVER_FILE_PATH = RECEIVER_PATH + 'out.jpg'
 # Other Constants
 ANNOTATION_CLASSES = ['1_blue', '2_green', '3_red', '4_white', '5_yellow', '6_blue', '7_green', '8_red', '9_white', 'a_red', 'b_green', 'bullseye', 'c_white', 'circle_yellow', 'd_blue', 'down_arrow_red', 'e_yellow', 'f_red', 'g_green', 'h_white', 'left_arrow_blue', 'right_arrow_green', 's_blue', 't_yellow', 'u_red', 'up_arrow_white', 'v_green', 'w_white', 'x_blue', 'y_yellow', 'z_red']
 NUM_CLASSES = 31
+WEIGHTS = ['e40b16v8best.pt', 'E30_B16_TSv1.pt']
 
 # System Settings
 CONNECTION_RETRY_TIMEOUT = 1
-SAVE_PATH = '../inferences/'
+WEIGHT_SELECTION = 1
 SAVE_RESULTS = True
+SAVE_PATH = '../inferences/'
 USE_GPU = True
 
 # DEBUG Parameters
@@ -40,7 +42,7 @@ RPisock = None # Socket of RPi
 def main():
     # Initialize Global Recognizer used for all images
     global SymbolRec
-    SymbolRec = SymRec(WEIGHT_PATH, ANNOTATION_CLASSES, NUM_CLASSES, USE_GPU)
+    SymbolRec = SymRec(WEIGHT_PATH + WEIGHTS[WEIGHT_SELECTION], ANNOTATION_CLASSES, NUM_CLASSES, USE_GPU)
 
     if DEBUG_MODE_ON:
         startTime = time.time()
