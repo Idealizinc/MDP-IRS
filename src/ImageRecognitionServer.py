@@ -15,7 +15,7 @@ import time
 # Constant PATH variables
 WEIGHT_PATH = "../weights/"
 YOLO_PATH = "../yolov5"
-IMAGE_PATH = "../testimg/test.jpg"
+IMAGE_PATH = "../testimg/3_47.jpg"
 
 RECEIVER_PATH = "../receivedimg/"
 RECEIVER_FILE_PATH = RECEIVER_PATH + 'out.jpg'
@@ -26,8 +26,8 @@ NUM_CLASSES = 31
 WEIGHTS = ['e40b16v8best.pt', 'E30_B16_TSv1.pt']
 
 # System Settings
-CONNECTION_RETRY_TIMEOUT = 1
-WEIGHT_SELECTION = 1
+CONNECTION_RETRY_TIMEOUT = 0.5
+WEIGHT_SELECTION = 0 # Which weights file to load, refer to list above @ WEIGHTS
 SAVE_RESULTS = True
 SAVE_PATH = '../inferences/'
 USE_GPU = True
@@ -65,7 +65,7 @@ def serverProcess():
     while RPisock != None:
         print("> Checking for receivable image")
         try: # Try to receive image
-            receiveImage(RPisock)
+            receiveImage(RPisock, CONNECTION_RETRY_TIMEOUT)
             processFlag = True
         except (ValueError, Exception):
             processFlag = False

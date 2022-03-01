@@ -15,6 +15,7 @@ class SymbolRecognizer:
     Model = None
     Classes = None
     ClassCount = -1
+    ConfThreshold = 0.75 # NMS confidence threshold
 
     # Class constuctor to setup weights
     def __init__(self, weightPath, classes, numclasses, useGPU = True):
@@ -33,7 +34,7 @@ class SymbolRecognizer:
             self.Model = torch.hub.load('../yolov5/', 'custom', path=weightPath, source='local')
         else: self.Model = torch.hub.load('../yolov5/', 'custom', path=weightPath, source='local', device='cpu')
         # Set acceptable confidence
-        self.Model.conf = 0.75  # NMS confidence threshold
+        self.Model.conf = self.ConfThreshold
         # Print status
         print("\nYOLOv5 Model initiallized with weight: " + weightPath + "\n")
 
@@ -54,19 +55,22 @@ class SymbolRecognizer:
         labels, coords, conf = results.xyxyn[0][:, -1].to('cpu').numpy(), results.xyxyn[0][:, :-2].to('cpu').numpy(), results.xyxyn[0][:, -2].to('cpu').numpy()
 
         # Vertical Height calculations
+        print("Calculating Bound Heights")
         heightList = []
         for i in range(len(coords)):
             y = coords[i][3] - coords[i][1]
             heightList.append(y) # Height of bounding box
-        print("Height for each bound: " + ' '.join([str(Height) for Height in heightList]))
+        #print("Height for each detected bound: " + ' '.join([str(Height) for Height in heightList]))
 
         # Get class names for each label
         nameList = []
+        print("Identifying Class Tags")
         for i in labels:
             nameList.append(self.Classes[int(i)])
 
         # Get X offset of bound from center of image
         offsetList = []
+        print("Calculating Directional Offset")
         for coord in coords:
             # Calculate center for each bound
             x, y = (coord[2] - coord[0]) * 0.5 + coord[0], (coord[3] - coord[1]) * 0.5 + coord[1]
@@ -77,6 +81,7 @@ class SymbolRecognizer:
 
         # Merge results into a dataframe of <label, coords, height, confidence>
         resultDF = pd.DataFrame({'name' : nameList, 'labels' : labels, 'height' : heightList, 'offset' : offsetList, 'conf' : conf})
+        print("\n> Processed Detection Results")
         print(resultDF)
 
         return resultDF
@@ -104,24 +109,3 @@ class SymbolRecognizer:
         if label == "Nothing" and bullseyeFound:
             label = 'bullseye'
         return label
-
-    def ConvertRatioToPhysicalDistance(ratio):
-        # Hardcoded function to be calibrated with physical distance against ratio
-        # Converts passed ratio into estimated physical distance
-        # Conversion of physical distance to pixel ratio technically not viable
-
-        '''
-        Consider the approx of symbol size to bound height
-        Can technically find the ratio of cm/pixelRatio
-        If we approx object distance via bound height as well
-        We can technically determine the offset angle by converting pixel ratio offset
-        to physical distance and using approx distance away to find the angle with tan-1
-        Need for 2 approximations
-        - Ratio height of bound at known distance
-        - Physical height of obstacle approximated to ratio height
-        Approximation of obstacle to ratio height may have potential issues
-        - What is the correlative size of the object at 0 distance, is it the physical size???
-        - Can it be assumed that at 0 dist symbol = phys size, ratio = 1
-        - then at x dist, symbol =
-        '''
-        return ratio
