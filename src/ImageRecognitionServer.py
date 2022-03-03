@@ -31,15 +31,15 @@ WEIGHTS = ['e40b16v8best.pt', 'E30_B16_TSv1.pt']
 
 # System Settings
 CONNECTION_RETRY_TIMEOUT = 0.5      # How long to timeout in seconds
-WEIGHT_SELECTION = 0                # Which weights file to load, refer to list above @ WEIGHTS
+WEIGHT_SELECTION = 1                # Which weights file to load, refer to list above @ WEIGHTS
 COLLAGE_PATH = '../collage/'        # Path of the saved collage
 SAVE_RESULTS = True                 # Save result images in listed SAVE_PATH
 SAVE_PATH = '../inferences/'        # Location to save images to
 USE_GPU = False                     # Allow IRS to use GPU or CPU
 
 # DEBUG Parameters
-DEBUG_MODE_ON = False               # For local testing purposes, set to False for real use
-DEBUG_IMAGE = "1_5 - Copy.jpg"
+DEBUG_MODE_ON = True               # For local testing purposes, set to False for real use
+DEBUG_IMAGE = "1_5.jpg"
 IMAGE_PATH = "../testimg/" + DEBUG_IMAGE
 
 # Global Parameters
