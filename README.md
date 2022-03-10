@@ -7,6 +7,18 @@ Refer to the src folder in the project directory for the code files of this proj
   - Contains configurable settings for the server process
 - SymbolRecognizer.py > Class that holds an object where the model is loaded into and contains wrapper functions for performing and processing inferences
 
+## Folder Structure
+IRS
+- collage (Output inference collage)
+- inferences (Inference processed images)
+- receivedimg (Images received from RPi <Unprocessed>)
+- src (Source code)
+- weights (Trained weights for the YOLOv5 model)
+- yolov5 (Local YOLOv5 repository used for loading the model)
+  
+## Notes
+- In between runs of IRS, please empty the inference folders to allow for correct collage output
+
 # Installation Guide
 ## Setup w/ GPU
 - Install pip https://pypi.org/project/pip/
